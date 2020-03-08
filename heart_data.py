@@ -9,7 +9,7 @@ import numpy as np
 # attributes = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'num']
 
 TEST_PERCENT = 0.20
-
+LABEL = 'num'
 '''
 class value:
     def __init__(self, data_arr, attributes):
@@ -98,17 +98,55 @@ def replace_with_median(data, attributes):
                 while (data[title][middle] == '?'):
                     middle += 1
                 data[title][i] = data[title][middle]
-def print_point(data, index):
-    for attribute in attributes:
-        print(attribute + ": " + str(data[attribute][0]))
+
+# Scales all data to [0,1]
+def standardize_data(input_data):
+    normal_data = copy.copy(input_data)
+    for key in normal_data:
+        if(key != LABEL):
+            max_data = float(max(normal_data[key]))
+            for i in range(len(normal_data[key])):
+                normal_data[key][i] = float(normal_data[key][i]) / max_data
+    return normal_data
+
+def test_accuracy(correct_labels, generated_labels):
+    num_labels = max(generated_labels) + 1
+    correct = [0] * num_labels  
+    for label_offset in range(num_labels):
+        max_of_labels = [0] * num_labels
+        for label in range(1, num_labels + 1):
+            for j in range(len(correct_labels)):  # for each label of the same
+                if(correct_labels[j] == label):   # value
+                    if((correct_labels[j] + label_offset) % num_labels == generated_labels[j]):
+                        max_of_labels[label - 1] += 1
+            if max_of_labels[label - 1] > correct[label - 1]:
+                correct[label - 1] = max_of_labels[label - 1]
+    return sum(correct)/len(correct_labels)
+
+def convert_array(in_dictionary):
+    dictionary = copy.copy(in_dictionary)
+    dictionary.pop(LABEL)
+    arr = []
+    i = 0
+    for key in dictionary.keys():
+        arr.append([])
+        for data in dictionary[key]:
+            arr[i].append(data)
+        i += 1
+    print(arr)
+    return arr
 
 input_data, attributes = get_data('ClevelandData.csv')
 
+normal_data = standardize_data(input_data)
+
 # Split Data
-training_data, test_data = data_split(input_data, TEST_PERCENT)
+training_data, test_data = data_split(normal_data, TEST_PERCENT)
 # Define K-Means
-kmeans = KMeans(n_clusters = 3, random_state = 0)
+kmeans = KMeans(n_clusters = int(max(training_data[LABEL])), random_state = 0)
 
 # K-Means
-kmeans.fit(np.array([training_data[key] for key in attributes]).T)
+attributes_without_label = copy.copy(attributes)
+attributes_without_label.pop(LABEL)
+kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
