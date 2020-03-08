@@ -2,7 +2,7 @@
 import csv
 
 # attributes = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'num']
-
+# hi
 '''
 class value:
     def __init__(self, data_arr, attributes):
