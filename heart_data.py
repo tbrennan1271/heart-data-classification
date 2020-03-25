@@ -144,9 +144,8 @@ normal_data = standardize_data(input_data)
 training_data, test_data = data_split(normal_data, TEST_PERCENT)
 # Define K-Means
 kmeans = KMeans(n_clusters = int(max(training_data[LABEL])), random_state = 0)
-
 # K-Means
 attributes_without_label = copy.copy(attributes)
-attributes_without_label.pop(LABEL)
+attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
