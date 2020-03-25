@@ -10,6 +10,7 @@ import numpy as np
 
 TEST_PERCENT = 0.20
 LABEL = 'num'
+GROUP_CAP = 5           # Cap for the number of groups used to determine information gain
 '''
 class value:
     def __init__(self, data_arr, attributes):
@@ -104,9 +105,10 @@ def standardize_data(input_data):
     normal_data = copy.copy(input_data)
     for key in normal_data:
         if(key != LABEL):
-            max_data = float(max(normal_data[key]))
+            min_data = float(min(normal_data[key]))
+            max_data = float(max(normal_data[key])) - min_data
             for i in range(len(normal_data[key])):
-                normal_data[key][i] = float(normal_data[key][i]) / max_data
+                normal_data[key][i] = (float(normal_data[key][i]) - min_data) / max_data
     return normal_data
 
 def test_accuracy(correct_labels, generated_labels):
@@ -136,6 +138,34 @@ def convert_array(in_dictionary):
     print(arr)
     return arr
 
+# Divides result into categories with the determining attributes (may want to change name later)
+def entropy_groups(attribute, data):
+    tree = []
+    group = []
+    over_cap = False
+    for i in range(len(data[attribute])):
+        if len(group) > GROUP_CAP:
+            over_cap = True
+            break
+        elif data[attribute][i] not in group:
+            group.append(data[attribute][i])
+            tree.append([])
+            tree[group.index(data[attribute][i])].append(data[attribute][i])
+        tree[group.index(data[attribute][i])].append(data[LABEL][i])
+    if over_cap:
+        tree = []
+        group_count = 1 / GROUP_CAP
+        for i in range(GROUP_CAP):
+            tree.append([])
+            tree[i].append(group_count * (i + 1))
+        for i in range(len(data[attribute])):
+            for j in tree:
+                if data[attribute][i] < j[0]:
+                    j.append(data[LABEL][i])
+                    break
+        return tree
+    return tree
+
 input_data, attributes = get_data('ClevelandData.csv')
 
 normal_data = standardize_data(input_data)
@@ -149,3 +179,8 @@ attributes_without_label = copy.copy(attributes)
 attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
+
+tree = entropy_tree('cp', training_data)
+for i in tree:
+    print(i)
+    print()
