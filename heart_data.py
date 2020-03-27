@@ -147,46 +147,70 @@ def entropy_groups(attribute, data):
     over_cap = False
     for i in range(len(data[attribute])):
         val = data[attribute][i]
-        if len(group) > GROUP_CAP:              # Breaks initial loop if exceeds 5 attributes
+        if len(group) > GROUP_CAP:
             over_cap = True
             break
-        elif val not in group:   # Creates an array to hold attribute value with associated label
-            group.append(val)
+        elif val not in group:
+            group.append(val)                           # Holds the number of features to check if over cap
             tree.append([])
-            tree[group.index(val)].append(val)
-        tree[group.index(val)].append(data[LABEL][i])
-    if over_cap:        # Limits group to have five sections (breaks apart standardization to fifths)
+            tree[group.index(val)].append(val)          # Appends the feature
+        tree[group.index(val)].append(data[LABEL][i])   # Appends label associated to feature
+    if over_cap:
         tree = []
         group_count = 1 / GROUP_CAP
         for i in range(GROUP_CAP):
             tree.append([])
-            tree[i].append(group_count * (i + 1))
+            tree[i].append(group_count * (i + 1))       # Creates segmented dividers
         for i in range(len(data[attribute])):
             for j in tree:
-                if data[attribute][i] < j[0]:
+                if data[attribute][i] <= j[0]:           # Determines where label belongs in dividers based on actual feature
                     j.append(data[LABEL][i])
-                    break
+                    break            
     return tree
 
 # Calculates the fraction of each label present in each attribute
 # This was done as binary values, so needs to be repeated with each label and must be weighted
 def binary_entropy(label_val, group):
-    t_group = copy.copy(group)
+    t_group = copy.deepcopy(group)
     num_label = []
     total = 0
     loop = 0
     for attribute in t_group:
         num_label.append([])
         num_label[loop].append(attribute.pop(0))
-        num_label[loop].append(0)
+        num_label[loop].append(0)   # Used to hold the label fraction
+        num_label[loop].append(0)   # Used to hold the non-label fraction
         for label in attribute:
             total += 1
             if label == label_val:
                 num_label[loop][1] += 1
+            else:
+                num_label[loop][2] += 1
         loop += 1
     for fraction in num_label:
         fraction[1] = fraction[1] / total
+        fraction[2] = fraction[2] / total
     return num_label
+
+# Calculates the entropy values for each attribute (treats them as binary values)
+''' TODO: find out how to calculate/weigh with all the binary values to get nonbinary answer 
+          also clean up the formatting of the output '''
+def entropy(attribute, data):
+    final = []
+    groups = entropy_groups(attribute, data)
+    for i in range(int(max(data[LABEL]))):
+        entropy_vals = []
+        dec_groups = binary_entropy(i, groups)
+        for decimal in dec_groups:
+            val = 0
+            temp = []
+            temp.append(decimal.pop(0)) # Appends feature/divided section as first element
+            for j in decimal:
+                val += j * np.log2(j)
+            temp.append(-val)
+            entropy_vals.append(temp)
+        final.append(entropy_vals)      # final : [find label values][find feature values][0 = actual feature value, 1 = entropy value]
+    return final
 
 input_data, attributes = get_data('ClevelandData.csv')
 
@@ -202,9 +226,7 @@ attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
 
-group = entropy_groups('cp', training_data)
-for i in group:
-    print(i)
+for attribute in attributes_without_label:
+    print(attribute)
+    print(entropy(attribute, training_data))
     print()
-print('\n\n')
-print(binary_entropy(1, group))
