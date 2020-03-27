@@ -166,6 +166,9 @@ def entropy_groups(attribute, data):
         return tree
     return tree
 
+'''def binary_entropy(label_val, group):
+    '''
+
 input_data, attributes = get_data('ClevelandData.csv')
 
 normal_data = standardize_data(input_data)
@@ -180,7 +183,7 @@ attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
 
-tree = entropy_tree('cp', training_data)
-for i in tree:
+group = entropy_groups('cp', training_data)
+for i in group:
     print(i)
     print()
