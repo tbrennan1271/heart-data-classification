@@ -8,6 +8,8 @@ import numpy as np
 
 # attributes = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'num']
 
+random.seed(0)
+
 TEST_PERCENT = 0.20
 LABEL = 'num'
 GROUP_CAP = 5           # Cap for the number of groups used to determine information gain
@@ -144,15 +146,16 @@ def entropy_groups(attribute, data):
     group = []
     over_cap = False
     for i in range(len(data[attribute])):
-        if len(group) > GROUP_CAP:
+        val = data[attribute][i]
+        if len(group) > GROUP_CAP:              # Breaks initial loop if exceeds 5 attributes
             over_cap = True
             break
-        elif data[attribute][i] not in group:
-            group.append(data[attribute][i])
+        elif val not in group:   # Creates an array to hold attribute value with associated label
+            group.append(val)
             tree.append([])
-            tree[group.index(data[attribute][i])].append(data[attribute][i])
-        tree[group.index(data[attribute][i])].append(data[LABEL][i])
-    if over_cap:
+            tree[group.index(val)].append(val)
+        tree[group.index(val)].append(data[LABEL][i])
+    if over_cap:        # Limits group to have five sections (breaks apart standardization to fifths)
         tree = []
         group_count = 1 / GROUP_CAP
         for i in range(GROUP_CAP):
@@ -163,11 +166,27 @@ def entropy_groups(attribute, data):
                 if data[attribute][i] < j[0]:
                     j.append(data[LABEL][i])
                     break
-        return tree
     return tree
 
-'''def binary_entropy(label_val, group):
-    '''
+# Calculates the fraction of each label present in each attribute
+# This was done as binary values, so needs to be repeated with each label and must be weighted
+def binary_entropy(label_val, group):
+    t_group = copy.copy(group)
+    num_label = []
+    total = 0
+    loop = 0
+    for attribute in t_group:
+        num_label.append([])
+        num_label[loop].append(attribute.pop(0))
+        num_label[loop].append(0)
+        for label in attribute:
+            total += 1
+            if label == label_val:
+                num_label[loop][1] += 1
+        loop += 1
+    for fraction in num_label:
+        fraction[1] = fraction[1] / total
+    return num_label
 
 input_data, attributes = get_data('ClevelandData.csv')
 
@@ -187,3 +206,5 @@ group = entropy_groups('cp', training_data)
 for i in group:
     print(i)
     print()
+print('\n\n')
+print(binary_entropy(1, group))
