@@ -210,5 +210,6 @@ print('Top three attributes with the highest information gain:')
 for i in range(3):
     top_three.append(max(all_info_gain))
     index = all_info_gain.index(max(all_info_gain))
-    print(attributes_without_label[index], '-', all_info_gain.pop(index))
+    print(attributes_without_label[index], '-', all_info_gain[index])
+    all_info_gain[index] = 0
 
