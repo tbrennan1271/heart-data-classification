@@ -225,12 +225,12 @@ def entropy(attribute, data):
         print(weight)
         print(decimal)
         for j in decimal:   # Calculates entropy for each label value for every attribute
-            if j:
+            if j != 0:
                 val -= (j * np.log2(j))
         #val = -val
-        print(val)
+        print("val:", str(val))
         val *= weight       # Applies the weight to the entropy to find the information gain
-        print(val)
+        print("weighted val:", str(val))
         print()
         '''if val != val:          # Just makes nan values 0 for the time being, as I brainstorm how to solve the issue
             val = 0'''
