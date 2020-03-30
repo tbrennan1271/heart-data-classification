@@ -110,6 +110,9 @@ def standardize_data(input_data):
     return normal_data
 
 def test_accuracy(correct_labels, generated_labels):
+    print(min(correct_labels))
+    print(min(generated_labels))
+
     num_labels = max(generated_labels) + 1
     correct = [0] * num_labels  
     for label_offset in range(num_labels):
@@ -149,3 +152,10 @@ attributes_without_label = copy.copy(attributes)
 attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
+print(test_accuracy(test_data['num'], training_labels))
+
+clf = svm.SVC(kernel="linear", C = 10.0)
+clf.fit(np.array([training_data[key] for key in training_data.keys()]).T, training_labels)
+svm_test_labels = clf.predict(np.array([test_data[key] for key in test_data.keys()]).T)
+
+print(test_accuracy(test_data['num'], svm_test_labels))
