@@ -198,7 +198,7 @@ def attribute_split(group):
     return num_label, total_labels
 
 # Calculates the entropy values for each attribute
-def entropy(attribute, data):
+def info_gain(attribute, data):
     information_gain = 0
     system_entropy = 0
     groups = entropy_groups(attribute, data)
@@ -233,20 +233,20 @@ attributes_without_label = copy.copy(attributes)
 attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
-
 MAX_LABEL = int(max(training_data[LABEL]))
 
-#print(training_data)
-test = {'hek' : [1, 1, 1, 0],
-        'num' : [0, 0, 1, 1]}
-#MAX_LABEL = int(max(test[LABEL]))
-
-#print(entropy('hek', test))
-
-#print( ((.667) * np.log2(.667)) + ((.334) * np.log2(.334)))
-
+all_info_gain = []
+top_three = [0, 0, 0]
+count = 0
 for attribute in attributes_without_label:
-    print(attribute)
-    print(entropy(attribute, training_data))
-    #entropy(attribute, training_data)
+    all_info_gain.append(info_gain(attribute, training_data))
+    print('Information gain of', attribute, 'is', all_info_gain[count])
     print()
+    count += 1
+print()
+print('Top three attributes with the highest information gain:')
+for i in range(3):
+    top_three.append(max(all_info_gain))
+    index = all_info_gain.index(max(all_info_gain))
+    print(attributes_without_label[index], '-', all_info_gain.pop(index))
+
