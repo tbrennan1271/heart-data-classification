@@ -240,7 +240,7 @@ def entropy(attribute, data):
         '''if val != val:          # Just makes nan values 0 for the time being, as I brainstorm how to solve the issue
             val = 0'''
         final.append(val)       # final : [find label values][find feature values][0 = actual feature value, 1 = entropy value]
-    print(final)
+    print('final: ',final)
     information_gain = (system_entropy - sum(final))
     return information_gain
 
