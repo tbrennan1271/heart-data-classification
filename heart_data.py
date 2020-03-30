@@ -13,6 +13,7 @@ random.seed(0)
 TEST_PERCENT = 0.20
 LABEL = 'num'
 GROUP_CAP = 5           # Cap for the number of groups used to determine information gain
+MAX_LABEL = 0             # Determined from code
 '''
 class value:
     def __init__(self, data_arr, attributes):
@@ -165,52 +166,89 @@ def entropy_groups(attribute, data):
             for j in tree:
                 if data[attribute][i] <= j[0]:           # Determines where label belongs in dividers based on actual feature
                     j.append(data[LABEL][i])
-                    break            
+                    break  
+    print (tree)
     return tree
 
 # Calculates the fraction of each label present in each attribute
 # This was done as binary values, so needs to be repeated with each label and must be weighted
-def binary_entropy(label_val, group):
+def binary_entropy(group):
     t_group = copy.deepcopy(group)
     num_label = []
-    total = 0
+    total_labels = []
+    labels = [0] * MAX_LABEL        # Array to hold the total number of labels for each feature threshold
     loop = 0
-    for attribute in t_group:
-        num_label.append([])
-        num_label[loop].append(attribute.pop(0))
-        num_label[loop].append(0)   # Used to hold the label fraction
-        num_label[loop].append(0)   # Used to hold the non-label fraction
-        for label in attribute:
-            total += 1
-            if label == label_val:
-                num_label[loop][1] += 1
-            else:
-                num_label[loop][2] += 1
+    total = 0
+    for feature in t_group:
+        all_attr = 0
+        num_label.append([0] * (MAX_LABEL + 2))  # [attribute name, label fraction, non-label fraction, weight of attribute]
+        num_label[loop][0] = feature.pop(0)
+        for i in feature:
+            all_attr += 1
+            num_label[loop][int(i + 1)] += 1
+        num_label[loop].append(all_attr)
+        total_labels.append(all_attr)
+        if all_attr:
+            for i in range(MAX_LABEL + 1):
+                num_label[loop][int(i + 1)] /= all_attr
+        total += all_attr
         loop += 1
+    print(total_labels)
+    for i in range(len(total_labels)):
+        total_labels[i] /= total
+    print(total_labels)
+    for i in num_label:
+        i[int(MAX_LABEL + 2)] /= total
+    '''for val in num_label:
+        
     for fraction in num_label:
         fraction[1] = fraction[1] / total
-        fraction[2] = fraction[2] / total
-    return num_label
+        fraction[2] = fraction[2] / total'''
+    #print(num_label)
+    print()
+    return num_label, total_labels
 
 # Calculates the entropy values for each attribute (treats them as binary values)
 ''' TODO: find out how to calculate/weigh with all the binary values to get nonbinary answer 
-          also clean up the formatting of the output '''
+          also clean up the formatting of the output 
+          also deal with nan values
+          also deal with why exang returns neg info gain'''
 def entropy(attribute, data):
-    final = []
+    information_gain = 0
+    system_entropy = 0
     groups = entropy_groups(attribute, data)
-    for i in range(int(max(data[LABEL]))):
-        entropy_vals = []
-        dec_groups = binary_entropy(i, groups)
-        for decimal in dec_groups:
-            val = 0
-            temp = []
-            temp.append(decimal.pop(0)) # Appends feature/divided section as first element
-            for j in decimal:
-                val += j * np.log2(j)
-            temp.append(-val)
-            entropy_vals.append(temp)
-        final.append(entropy_vals)      # final : [find label values][find feature values][0 = actual feature value, 1 = entropy value]
-    return final
+    final = []
+    dec_groups, total_labels = binary_entropy(groups)
+    for i in total_labels:
+        if i:
+            system_entropy -= (i * np.log2(i))
+    print('sys entropy: ', system_entropy)
+    for decimal in dec_groups:
+        val = 0
+        print(decimal.pop(0), '---------------------')
+        weight = decimal.pop(len(decimal) - 1)
+        print(weight)
+        print(decimal)
+        for j in decimal:   # Calculates entropy for each label value for every attribute
+            if j:
+                val -= (j * np.log2(j))
+        #val = -val
+        print(val)
+        val *= weight       # Applies the weight to the entropy to find the information gain
+        print(val)
+        print()
+        '''if val != val:          # Just makes nan values 0 for the time being, as I brainstorm how to solve the issue
+            val = 0'''
+        final.append(val)       # final : [find label values][find feature values][0 = actual feature value, 1 = entropy value]
+    print(final)
+    information_gain = (system_entropy - sum(final))
+    return information_gain
+
+'''def info_gain(attribute, data):
+    for label_val in data:
+        i_g = 0
+        for feat_val in label_val:'''
+            
 
 input_data, attributes = get_data('ClevelandData.csv')
 
@@ -226,7 +264,19 @@ attributes_without_label.pop(attributes_without_label.index(LABEL))
 kmeans.fit(np.array([training_data[key] for key in attributes_without_label]).T)
 training_labels = kmeans.labels_
 
+MAX_LABEL = int(max(training_data[LABEL]))
+
+#print(training_data)
+test = {'hek' : [1, 1, 1, 0],
+        'num' : [0, 0, 1, 1]}
+#MAX_LABEL = int(max(test[LABEL]))
+
+#print(entropy('hek', test))
+
+#print( ((.667) * np.log2(.667)) + ((.334) * np.log2(.334)))
+
 for attribute in attributes_without_label:
     print(attribute)
     print(entropy(attribute, training_data))
+    #entropy(attribute, training_data)
     print()
