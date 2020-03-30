@@ -199,11 +199,6 @@ def binary_entropy(group):
     print(total_labels)
     for i in num_label:
         i[int(MAX_LABEL + 2)] /= total
-    '''for val in num_label:
-        
-    for fraction in num_label:
-        fraction[1] = fraction[1] / total
-        fraction[2] = fraction[2] / total'''
     #print(num_label)
     print()
     return num_label, total_labels
